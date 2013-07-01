@@ -14,103 +14,41 @@ option java_multiple_files = true;
 option java_generate_equals_and_hash = true;
 option optimize_for = SPEED;
 
-// Client/TGS Session Key
-message DomainKey {
+// Common base for client/domain/server tickets.
+// Encrypted with: client/domain/server-key.
+message BaseTicket {
 
-	//
-	optional bytes plainText = 1;
+	// Permanent client UUID.
+	optional string clientID = 1;
 
-}
+	// Updatable client GUID as supported URI.
+	optional string clientURI = 2;
 
-// Client/TGS Session Key
-message EncryptedDomainKey {
+	// Permanent server UUID.
+	optional string serverID = 3;
 
-	// encrypted using the secret key of the client/user
-	optional bytes cypherText	= 1;
+	// Updatable server GUID as supported URI.
+	optional string serverURI = 4;
 
-}
-
-// Client/Server Session Key
-message ProviderKey {
-
-	//
-	optional bytes plainText = 1;
-
-}
-
-// Client/Server Session Key
-message EncryptedProviderKey {
-
-	// encrypted with the Client/TGS Session Key
-	optional bytes cypherText	= 1;
-
-}
-
-// Ticket-Granting-Ticket (which includes the client ID, client network address,
-// ticket validity period, and the client/TGS session key)
-message DomainTicket {
-
-	// "protocol://realm-id/user-id/device-id"
-	// "kerberos://account.barchart.com/jeremy.jongsma/chrome-tablet"
-	// "kerberos-query:///?realm-id=account.barchart.com&user-id=jeremy.jongsma&device-id=chrome-tablet"
-	optional string accountURI = 1;
+	// Ticket creation date and time, milliseconds UTC.
+	optional sint64 creationTime = 5;
 
 	// Ticket expiration date and time, milliseconds UTC.
-	optional sint64 expirationTime = 2;
+	optional sint64 expirationTime = 6;
 
-	// Client/TGS Session Key
-	optional DomainKey domainKey = 3;
-
-}
-
-// encrypted using the secret key of the TGS.
-message EncryptedDomainTicket {
-
-	optional bytes cypherText	= 1;
+	// Can be one of:
+	// * domain-key
+	// * server-key
+	optional bytes contextKey = 7;
 
 }
 
 
-// Client-to-server ticket (which includes the client ID, client network address, validity period and Client/Server Session Key)
-message ProviderTicket {
+// Provider service request/response ticket.
+// Encrypted with: server-key.
+message ServiceTicket {
 
-	// "protocol://realm-id/user-id/device-id"
-	optional string accountURI = 1;
-
-	// Ticket expiration date and time, milliseconds UTC.
-	optional sint64 expirationTime = 2;
-
-	// Client/Server Session Key
-	optional ProviderKey providerKey = 3;
-
-}
-
-// Client-to-server ticket
-message EncryptedProviderTicket {
-
-	// encrypted using the service's secret key.
-	optional bytes cypherText	= 1;
-
-}
-
-// Authenticator (which is composed of the client ID and the timestamp)
-message StampTicket {
-
-	// "protocol://realm-id/user-id/device-id"
-	optional string accountURI = 1;
-
-	// Ticket generation date and time, milliseconds UTC.
-	optional sint64 timeStamp = 2;
-
-}
-
-
-// Authenticator (which is composed of the client ID and the timestamp)
-message EncryptedStampTicket {
-
-	// encrypted using the Client/TGS Session Key.
-	// or
-	// encrypted using the Client/Server Session Key
-	optional bytes cypherText	= 1;
+	// Provider specific request/response context.
+	optional string context = 1;
 
 }

@@ -17,109 +17,240 @@ option optimize_for = SPEED;
 // Message fields descriptor.
 import "KerberosFieldSpec.proto";
 
+// Dictionary:
 //
+// client: computer accessing a server with kerberos authentication/authorization.
+// server: computer providing kerberos-protected service.
+// domain: combination of kerberos AS + TGS + KDC.
+//
+// client-id: permanent client GUID
+// client-uri: updatable client GUID in a form of "client://account.barchart.com/jeremy.jongsma".
+// client-secret: user-provided password
+// client-key: derived from client-secret with one-way function. available to client and domain.
+//
+// server-uri: updatable server GUID in a form of "server://feed.barchart.com/connection".
+// server-key: transient client/server session key issued by domain to the client and to the server.
+// server-secret: internal server secret known to the server and the domain.
+// server-ticket: ticket issued by domain for the server for the following authorizations. encrypted with server-secret.
+//
+// domain-key: transient client/domain session key issued by domain to the client.
+// domain-secret: internal domain secret known only to the domain.
+// domain-ticket: ticket issued by domain for the client for the following authorizations. encrypted with domain-secret.
+//
+// magic-id: client/domain or client/server conversation random GUID. matches for single request/response pair.
+//
+// signature: https://en.wikipedia.org/wiki/Hash-based_message_authentication_code
+//
+// ticket: piece of information encrypted with a key. @see BaseTicket.
+//
+// uuid: http://en.wikipedia.org/wiki/Universally_unique_identifier
+// uri: https://en.wikipedia.org/wiki/Uniform_resource_identifier
+//
+
+// Protocol:
+//
+// 1) Authentication.
+//
+// 1.1) client:
+// * ask user for credentials: (client-uri, client-secret)
+// * convert credentials -> client-key, persist client-key
+// * send to domain ClientAccreditRequest
+//
+// 1.2) domain:
+// * receive from client ClientAccreditRequest
+// * locate client-uri, client-key in database
+// * verify ClientAccreditRequest signature
+// * send to client DomainAccreditResponse
+// * in case of any errors, there will be no response to the client
+//
+// 1.3) client:
+// * receive DomainAccreditResponse or timeout with error to user
+// * locate client-key, verify DomainAccreditResponse signature
+// * persist client-ticket, domain-ticket
+//
+// 2) Authorization.
+//
+// 2.1) client:
+// * send to domain ClientAuthorizeRequest
+//
+// 1.2) domain:
+// * receive from client ClientAuthorizeRequest
+// * verify ClientAuthorizeRequest
+// * check permissions against the database
+// * send to client DomainAuthorizeResponse
+// * in case of any errors, there will be no response to the client
+//
+// 2.3) client:
+// * receive DomainAuthorizeResponse or timeout with error to user
+// *
+//
+// 3) Service.
+//
+// 3.1) client:
+//
+// 3.2) server:
+//
+// 3.3) client:
+
+
+// Base kerberos message.
+// Extended by component entries.
 message KerberosMessage {
-}
 
-// Domain/Provider/Client error response.
-message ErrorResponseMessage {
+	extensions 100 to 200;
 
-	// Error code.
-	optional sint64 code = 1;
+	// Known extension types.
+	enum Type {
 
-	// Human readable error explanation.
-	optional string comment = 2;
-}
+		UNKNOWN = 0;
 
-// Client request to Authentication Server (AS)
-message ClientAuthenticateRequestMessage {
+		CLIENT_ACCREDIT_REQUEST = 101;
+		DOMAIN_ACCREDIT_RESPONSE = 102;
 
-	// Account identity
-	optional DomainTicket domainTicket = 1;
+		CLIENT_AUTHORIZE_REQUEST = 103;
+		DOMAIN_AUTHORIZE_RESPONSE = 104;
 
-}
+		CLIENT_SERVICE_REQUEST = 105;
+		SERVER_SERVICE_RESPONSE = 106;
 
-// Authentication Server (AS) response to client.
-message DomainAuthenticateResponseMessage{
+	}
 
-	// Client/TGS Session Key encrypted using the secret key of the client/user.
-	optional EncryptedDomainKey domainKey = 1;
+	// Extension entry type.
+	optional Type type = 1;
 
-	// Ticket-Granting-Ticket (which includes the client ID, client network address, ticket validity period, and the client/TGS session key)
-	// encrypted using the secret key of the TGS
-	optional EncryptedDomainTicket domainTicket = 2;
+	// HMAC signature of the extension.
+	optional bytes signature = 2;
 
 }
 
-// Client request to Authentication Server (AS)
-message ClientAuthorizeRequestMessage {
+// Client -> Domain authentication request.
+// Signed with: client-key.
+message ClientAccreditRequest {
 
-	// ID of the requested service provider
-	// "protocol://realm-id/service-id"
-	optional string serviceURI = 1;
+	extend KerberosMessage {
+		optional ClientAccreditRequest extension = 101;
+	}
 
-	//Ticket-Granting-Ticket (which includes the client ID, client network address, ticket validity period, and the client/TGS session key)
-	// encrypted using the secret key of the TGS
-	optional EncryptedDomainTicket domainTicket = 2;
+	optional bytes magicID = 1;
 
-	// Authenticator (which is composed of the client ID and the timestamp),
-	// encrypted using the Client/TGS Session Key.
-	optional EncryptedStampTicket stampTicket = 3;
+	optional string clientURI = 2;
 
 }
 
-// Authentication Server (AS) response to client.
-message DomainAuthorizeResponseMessage {
+// Domain -> Client authentication response.
+// Signed with: client-key.
+message DomainAccreditResponse {
 
-	// Client/Server Session Key encrypted with the Client/TGS Session Key
-	optional EncryptedProviderKey providerKey = 1;
+	extend KerberosMessage {
+		optional DomainAccreditResponse extension = 102;
+	}
 
-	// Client-to-server ticket (which includes the client ID, client network address, validity period and Client/Server Session Key)
-	// encrypted using the service's secret key.
-	optional EncryptedProviderTicket providerTicket = 2;
+	optional bytes magicID = 1;
 
-}
+	// Client ticket:
+	// * clientID
+	// * clientURI
+	// * create time
+	// * expire time
+	// * domain-key
+	// Encrypted with: client-key
+	optional bytes clientTicket = 2;
 
-// Client request to Service Server (SS)
-message ClientServiceRequestMessage {
-
-	// the client-to-server ticket, encrypted using service's secret key
-	optional EncryptedProviderTicket providerTicket = 2;
-
-	// Authenticator, which includes the client ID, timestamp
-	// encrypted using Client/Server Session Key.
-	optional EncryptedStampTicket stampTicket = 3;
-
-}
-
-// Service Server (SS) response to client.
-message ProviderServiceResponseMessage {
-
-	// the timestamp found in client's Authenticator plus 1,
-	// encrypted using the Client/Server Session Key.
-	optional EncryptedStampTicket stampTicket = 3;
+	// Domain ticket:
+	// * clientID
+	// * clientURI
+	// * create time
+	// * expire time
+	// * domain-key
+	// Encrypted with: domain-secret
+	optional bytes domainTicket = 3;
 
 }
 
-// Client -> Domain renewal request
-message ClientRenewalRequestMessage {
+// Client -> Domain authorization request.
+// Signed with: domain-key.
+message ClientAuthorizeRequest {
 
-	// current domain ticket owned by the client
-	optional EncryptedDomainTicket domainTicket = 2;
+	extend KerberosMessage {
+		optional ClientAuthorizeRequest extension = 103;
+	}
 
-	// encrypted using the Client/TGS Session Key.
-	optional EncryptedStampTicket stampTicket = 3;
+	optional bytes magicID = 1;
+
+	// Previously obtained domain ticket.
+	optional bytes domainTicket = 2;
+
+	// Server ticket:
+	// * serverURI
+	// * create time
+	// * expire time
+	// Encrypted with: domain-key
+	optional bytes serverTicket = 3;
 
 }
 
+// Domain -> Client authorization response.
+// Signed with: domain-key.
+message DomainAuthorizeResponse {
 
-// Domain -> Client renewal response
-message DomainRenewalResponseMessage{
+	extend KerberosMessage {
+		optional DomainAuthorizeResponse extension = 104;
+	}
 
-	// Client/TGS Session Key encrypted using the secret key of the client/user.
-	optional EncryptedDomainKey domainKey = 1;
+	optional bytes magicID = 1;
 
-	// renewed domain ticket issued by the domain
-	optional EncryptedDomainTicket domainTicket = 2;
+	// Client ticket:
+	// * serverURI
+	// * create time
+	// * expire time
+	// * server-key
+	// Encrypted with: domain-key
+	optional bytes clientTicket = 2;
+
+	// Server ticket:
+	// * clientID
+	// * clientURI
+	// * create time
+	// * expire time
+	// * server-key
+	// Encrypted with: server-secret
+	optional bytes serverTicket = 3;
+
+}
+
+// Client -> Server service request.
+// Signed with: server-key
+message ClientServiceRequest {
+
+	extend KerberosMessage {
+		optional ClientServiceRequest extension = 105;
+	}
+
+	optional bytes magicID = 1;
+
+	// Previously obtained server ticket.
+	optional bytes serverTicket = 2;
+
+	// Service ticket:
+	// * request-context
+	// Encrypted with: server-key
+	optional bytes serviceTicket = 3;
+
+}
+
+// Server -> Client service response.
+// Signed with: server-key.
+message ServerServiceResponse {
+
+	extend KerberosMessage {
+		optional ServerServiceResponse extension = 106;
+	}
+
+	optional bytes magicID = 1;
+
+	// Service ticket:
+	// * response-context
+	// Encrypted with: server-key
+	optional bytes serviceTicket = 2;
 
 }
