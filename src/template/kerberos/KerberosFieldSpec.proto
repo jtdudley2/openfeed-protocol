@@ -46,7 +46,7 @@ message BaseTicket {
 
 // Provider service request/response ticket.
 // Encrypted with: server-key.
-message ServiceTicket {
+message FeatureTicket {
 
 	// Provider specific request/response context.
 	optional string context = 1;

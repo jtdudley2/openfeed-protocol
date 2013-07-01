@@ -234,7 +234,7 @@ message ClientServiceRequest {
 	// Service ticket:
 	// * request-context
 	// Encrypted with: server-key
-	optional bytes serviceTicket = 3;
+	optional bytes featureTicket = 3;
 
 }
 
@@ -251,6 +251,6 @@ message ServerServiceResponse {
 	// Service ticket:
 	// * response-context
 	// Encrypted with: server-key
-	optional bytes serviceTicket = 2;
+	optional bytes featureTicket = 2;
 
 }
