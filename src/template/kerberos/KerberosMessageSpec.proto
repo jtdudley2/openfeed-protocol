@@ -50,6 +50,7 @@ import "KerberosFieldSpec.proto";
 // Protocol:
 //
 // 1) Authentication.
+// * purpose: client obtains new domain-key form the domain
 //
 // 1.1) client:
 // * ask user for credentials: (client-uri, client-secret)
@@ -69,6 +70,7 @@ import "KerberosFieldSpec.proto";
 // * persist client-ticket, domain-ticket
 //
 // 2) Authorization.
+// * purpose: client obtains new server-key form the domain
 //
 // 2.1) client:
 // * send to domain ClientAuthorizeRequest
@@ -85,6 +87,7 @@ import "KerberosFieldSpec.proto";
 // *
 //
 // 3) Service.
+// * purpose: client performs feature request/response exchange with server
 //
 // 3.1) client:
 //
