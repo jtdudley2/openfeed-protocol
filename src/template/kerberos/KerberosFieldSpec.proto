@@ -15,7 +15,7 @@ option java_generate_equals_and_hash = true;
 option optimize_for = SPEED;
 
 // Common base for client/domain/server tickets.
-// Encrypted with: client/domain/server-key.
+// Encrypted with: client/domain/server key.
 message BaseTicket {
 
 	// Permanent client UUID.
@@ -40,6 +40,12 @@ message BaseTicket {
 	// * domain-key
 	// * server-key
 	optional bytes contextKey = 7;
+
+	// Ticket validity status.
+	optional bool valid = 8;
+
+	// Human readable ticket description.
+	optional string description = 9;
 
 }
 
