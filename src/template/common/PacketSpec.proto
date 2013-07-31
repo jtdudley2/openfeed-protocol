@@ -6,7 +6,7 @@
  * http://www.opensource.org/licenses/bsd-license.php
  */
 
-// Generic elements name space.
+// Common elements name space.
 package org.openfeed.proto.common;
 
 // Builder options.

@@ -6,23 +6,16 @@
  * http://www.opensource.org/licenses/bsd-license.php
  */
 
-// Instrument definition name space.
+// Common elements name space.
 package org.openfeed.proto.common;
+
+// Message fields descriptor.
+import "PacketSpec.proto";
 
 // Builder options.
 option java_multiple_files = true;
 option java_generate_equals_and_hash = true;
 option optimize_for = SPEED;
-
-// Packet type for heart beats.
-enum PacketType {
-
-	// Invalid type, represents error condition.
-	UNKNOWN = 0;
-
-	// Packet with connection heart beat messages.
-	HEARTBEAT = 8;
-}
 
 // Instrument definition packet with header.
 message HeartbeatPacket {
