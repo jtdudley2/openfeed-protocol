@@ -90,4 +90,7 @@ message ContentResponse {
 	// Response result.
 	optional Result result = 4;
 
+	// experimental
+	optional string experimental_01 = 5;
+
 }
