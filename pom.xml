@@ -19,7 +19,7 @@
 
 	<groupId>org.openfeed.proto</groupId>
 	<artifactId>openfeed-protocol</artifactId>
-	<version>1.0.4</version>
+	<version>1.0.5-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<description>
@@ -36,7 +36,7 @@ OpenFeed is open standard for market data delivery.
 		<url>https://github.com/openfeed-project/openfeed-protocol</url>
 		<connection>scm:git:git://github.com/openfeed-project/openfeed-protocol.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/openfeed-project/openfeed-protocol.git</developerConnection>
-		<tag>openfeed-protocol-1.0.4</tag>
+		<tag>master</tag>
 	</scm>
 
 	<build>
