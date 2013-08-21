@@ -190,3 +190,13 @@ message DateTimeStamp {
 	optional string timeZoneName = 15;
 
 }
+
+// A vendor's symbol for an instrument
+message Symbol {
+
+	// The vendor that provides this symbol.
+	optional string vendor = 1;
+
+	// The symbol assigned by the vendor.
+	optional string symbol = 2;
+}

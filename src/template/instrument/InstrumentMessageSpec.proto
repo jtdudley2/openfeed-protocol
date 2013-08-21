@@ -116,6 +116,9 @@ message InstrumentDefinition {
 	// Ordered list of underlying legs in a spread.
 	repeated SpreadLeg spreadLeg = 1000;
 
+	// List of vendor symbols
+	repeated Symbol symbols = 1001;
+
 	// #############################################
 
 	// Option strike price in market currency.
