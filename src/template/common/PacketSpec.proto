@@ -54,6 +54,9 @@ enum PacketType {
 	// Packet with kerberos token messages.
 	KERBEROS = 9;
 
+	// Packet for gateway.
+	GATEWAY = 10;
+
 }
 
 // Generic packet with flexible body encoding.
